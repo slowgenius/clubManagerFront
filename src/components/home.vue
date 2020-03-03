@@ -153,6 +153,7 @@
         this.getList();
       },
       add() {
+        this.club = {}
         this.dialogVisible = true;
         this.status = 1
       },
