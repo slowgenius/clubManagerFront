@@ -300,7 +300,15 @@
         }
       },
       typeFormat: function (type) {
-        this.$data.convertType(type)
+        if (type === 1) {
+          return '足球'
+        } else if (type === 2) {
+          return '羽毛球'
+        } else if (type === 3) {
+          return '篮球'
+        } else if (type === 4) {
+          return '乒乓球'
+        }
       }
     }
   }
