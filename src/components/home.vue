@@ -31,76 +31,56 @@
 
       <el-table-column label="操作" width="240" align="center">
         <template slot-scope="scope">
-          <el-button size="mini"
-                     type="text"
-                     @click="handleUpdate(scope.row)">
-            编辑
-          </el-button>
-          <el-button size="mini"
-                     type="text"
-                     @click="handleDelete(scope.row.id)">删除
+          <el-button size="mini" type="text" @click="handleUpdate(scope.row)">编辑</el-button>
+          <el-button size="mini" type="text" @click="handleDelete(scope.row.id)">删除
           </el-button>
         </template>
       </el-table-column>
     </el-table>
 
+
     <el-dialog
       title="添加"
       :visible.sync="dialogVisible"
       width="30%">
-      <el-form :model="club"  label-width="100px">
-        <el-form-item label="俱乐部名称"  :rules="[
-      { required: true, message: '请输入俱乐部信息', trigger: 'blur' }
-    ]">
+      <el-form :model="club" label-width="100px" ref="club" :rules="rules">
+        <el-form-item label="俱乐部名称" prop="name">
           <el-input v-model="club.name" placeholder="请输入俱乐部信息"></el-input>
         </el-form-item>
-        <el-form-item label="负责人"  :rules="[
-      { required: true, message: '请输入俱乐部信息', trigger: 'blur' }
-    ]">
+        <el-form-item label="负责人" prop="principal">
           <el-input v-model="club.principal" placeholder="请输入负责人姓名"></el-input>
         </el-form-item>
-        <el-form-item label="创建时间" :rules="[
-      { type: 'date' ,required: true, message: '请输入俱乐部信息', trigger: 'change' }
-    ]">
+        <el-form-item label="创建时间" prop="createTime">
           <el-date-picker
             v-model="club.createTime"
             type="date"
             placeholder="选择日期">
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="类型" :rules="[
-      { required: true, message: '请输入俱乐部信息', trigger: 'change' }
-    ]">
-          <el-select v-model="club.type" placeholder="请选择类型" >
-            <el-option
-              v-for="item in types"
-              :label="item.label"
-              :value="item.value">
-            </el-option>
+        <el-form-item label="类型" prop="type">
+          <el-select v-model="club.type" placeholder="请选择类型">
+            <el-option v-for="item in types" :label="item.label" :value="item.value"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="活动次数"  :rules="[
-      { type : 'number',required: true, message: '请输入正确活动次数', trigger: 'blur' }
-    ]">
+        <el-form-item label="活动次数" prop="activityTimes">
           <el-input v-model.number="club.activityTimes" placeholder="请输入活动次数"></el-input>
         </el-form-item>
-        <el-form-item label="会员数量"  :rules="[
-      {  type : 'number', required: true, message: '请输入正确会员数量', trigger: 'blur' }
-    ]">
+        <el-form-item label="会员数量" prop="vipCount">
           <el-input v-model.number="club.vipCount" placeholder="请输入会员数量"></el-input>
         </el-form-item>
-        <el-form-item label="备注" >
+        <el-form-item label="备注">
           <el-input v-model="club.remark" placeholder="请输入备注"></el-input>
         </el-form-item>
       </el-form>
       <el-button @click="cancle">取 消</el-button>
-      <el-button type="primary" @click="saveOrUpdate">确 定</el-button>
+      <el-button type="primary" @click="saveOrUpdate('club')">确 定</el-button>
       </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
+  import Qs from 'qs';
   export default {
     data() {
       return {
@@ -130,22 +110,58 @@
         }, {
           value: '4',
           label: '乒乓球'
-        }]
+        }],
+        rules: {
+          name: [
+            {required: true, message: '请输入俱乐部名称', trigger: 'blur'},
+          ],
+          principal: [
+            {required: true, message: '请输入负责人姓名', trigger: 'blur'},
+          ],
+          createTime: [
+            {required: true, message: '请选择创建时间', trigger: 'blur'},
+          ],
+          type: [
+            {required: true, message: '请选择类型', trigger: 'blur'},
+          ],
+          activityTimes: [
+            {required: true, message: '请输入活动次数', trigger: 'blur'},
+            {type: 'number', message: '请输入数字', trigger: 'blur'},
+            {
+              validator: (rule, value, callback) => {
+                if ((/^[+]?\d+$/).test(value) === false) {
+                  callback(new Error("活动次数必须大于零"));
+                } else {
+                  callback();
+                }
+
+              }, trigger: 'blur'
+            }
+          ],
+          vipCount: [
+            {type: 'number', required: true, message: '请输入会员数量', trigger: 'blur'},
+            {type: 'number', message: '请输入数字', trigger: 'blur'},
+            {
+              validator: (rule, value, callback) => {
+                if ((/^[+]?\d+$/).test(value) === false) {
+                  callback(new Error("会员数量必须大于零"));
+                } else {
+                  callback();
+                }
+
+              }, trigger: 'blur'
+            }
+          ],
+
+        }
+
       }
 
     },
     created() {
       this.getList();
     },
-    // filters: {
-    //   formatTime(time) {
-    //     let date = new Date(time);
-    //     console.log(new Date(time));
-    //     if (time) {
-    //       return this.formatDate(date, 'yyyy-MM-dd hh:mm:ss');
-    //     }
-    //   }
-    // },
+
     methods: {
       cancle() {
         this.dialogVisible = false;
@@ -161,7 +177,9 @@
         let that = this;
         let time = new Date(that.club.createTime);
         console.log(that.club)
-        this.$axios.post('http://localhost:8081/club/save?id=' + that.club.id + '&name=' + that.club.name + '&principal=' + that.club.principal + '&createTime=' + time.getTime() + '&type=' + that.club.type + '&activityTimes=' + that.club.activityTimes + '&vipCount=' + that.club.vipCount + '&remark=' + that.club.remark).then(function (response) {
+        let data = that.club
+
+        this.$axios.post('http://localhost:8081/club/save', data, {headers: {'Content-Type': 'application/json'}}).then(function (response) {
           if (response.data === -1) {
             that.$message('俱乐部名称已经被使用');
           } else {
@@ -177,9 +195,11 @@
       },
       update() {
         let that = this;
-        let time = new Date(that.club.createTime);
-        let type = that.reConvertType(that.club.type);
-        this.$axios.post('http://localhost:8081/club/update?id=' + that.club.id + '&name=' + that.club.name + '&principal=' + that.club.principal + '&createTime=' + time.getTime() + '&type=' + type + '&activityTimes=' + that.club.activityTimes + '&vipCount=' + that.club.vipCount + '&remark=' + that.club.remark).then(function (response) {
+        let data = that.club
+        data.time = new Date(that.club.createTime);
+        data.type = that.reConvertType(that.club.type);
+
+        this.$axios.post('http://localhost:8081/club/update', data, {headers: {'Content-Type': 'application/json'}}).then(function (response) {
           if (response.data === -1) {
             that.$message('俱乐部名称已经被使用');
           } else {
@@ -217,15 +237,23 @@
           console.log(response);
         })
       },
-      saveOrUpdate() {
+
+      saveOrUpdate(formName) {
         let that = this;
-        if (that.verrify(that.club)) {
-          if (that.status === 1) {
-            that.save();
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            if (that.status === 1) {
+              that.save();
+            } else {
+              that.update();
+            }
+            ;
           } else {
-            that.update();
+            that.$message('提交失败');
+            return false;
           }
-        }
+        });
+
       },
       convertType(type) {
         if (type === 1) {
@@ -251,57 +279,28 @@
           return type
         }
       },
-      verrify(club) {
-        let that = this;
-        if (club.name && club.principal && club.createTime && club.type && club.activityTimes && club.vipCount) {
-          if (club.activityTimes < 0) {
-            that.$message('活动次数需要大于零');
-            return false;
-          } else if (club.vipCount < 0) {
-            that.$message('vip数量需要大于零');
-            return false;
-          } else {
-            return true;
-          }
-        }else {
-          that.$message('请确认填入信息');
-          return false;
-        }
-
-
-      }
-
     },
     filters: {
       dateFormat: function (dateStr, pattern = 'yyyy-MM-dd') {
         // 根据给定的时间字符串，得到特定的时间
-        var dt = new Date(dateStr)
+        let dt = new Date(dateStr)
 
         //   yyyy-mm-dd
-        var y = dt.getFullYear()
-        var m = (dt.getMonth() + 1).toString().padStart(2, '0')
-        var d = dt.getDate().toString().padStart(2, '0')
+        let y = dt.getFullYear()
+        let m = (dt.getMonth() + 1).toString().padStart(2, '0')
+        let d = dt.getDate().toString().padStart(2, '0')
 
         if (pattern.toLowerCase() === 'yyyy-mm-dd') {
           return `${y}-${m}-${d}`
         } else {
-          var hh = dt.getHours().toString().padStart(2, '0')
-          var mm = dt.getMinutes().toString().padStart(2, '0')
-          var ss = dt.getSeconds().toString().padStart(2, '0')
-
+          let hh = dt.getHours().toString().padStart(2, '0')
+          let mm = dt.getMinutes().toString().padStart(2, '0')
+          let ss = dt.getSeconds().toString().padStart(2, '0')
           return `${y}-${m}-${d} ${hh}:${mm}:${ss}`
         }
       },
       typeFormat: function (type) {
-        if (type === 1) {
-          return '足球'
-        } else if (type === 2) {
-          return '羽毛球'
-        } else if (type === 3) {
-          return '篮球'
-        } else if (type === 4) {
-          return '乒乓球'
-        }
+        this.$data.convertType(type)
       }
     }
   }

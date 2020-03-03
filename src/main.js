@@ -6,6 +6,7 @@ import 'element-ui/lib/theme-chalk/index.css';
 import home from '@/components/home'
 import router from './router'
 import axios from 'axios';
+import Qs from 'qs';
 
 Vue.prototype.$axios = axios;
 Vue.config.productionTip = false
